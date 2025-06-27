@@ -1,0 +1,41 @@
+pipeline {
+    agent any
+
+    environment {
+        IMAGE_NAME = "flask-crud-api"
+        DOCKER_HUB_USERNAME = "your_dockerhub_username"
+    }
+
+    stages {
+        stage('Clone Repository') {
+            steps {
+                git 'https://github.com/devops99669/sample_app.git'
+            }
+        }
+
+        stage('Build Docker Image') {
+            steps {
+                sh 'docker build -t $IMAGE_NAME ./flask-docker-app'
+            }
+        }
+
+        stage('Push to Docker Hub') {
+            steps {
+                withCredentials([usernamePassword(credentialsId: 'dockerhub-creds', passwordVariable: 'DOCKER_PASSWORD', usernameVariable: 'DOCKER_USERNAME')]) {
+                    sh '''
+                        docker tag $IMAGE_NAME $DOCKER_USERNAME/$IMAGE_NAME
+                        echo $DOCKER_PASSWORD | docker login -u $DOCKER_USERNAME --password-stdin
+                        docker push $DOCKER_USERNAME/$IMAGE_NAME
+                    '''
+                }
+            }
+        }
+
+        stage('Deploy (Optional)') {
+            steps {
+                echo "Deploy step if needed"
+            }
+        }
+    }
+}
+
